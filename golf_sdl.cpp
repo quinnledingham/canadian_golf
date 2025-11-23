@@ -1,0 +1,155 @@
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
+
+#include "golf_defines.h"
+#include "golf_types.h"
+#include "golf_structs.h"
+#include "golf_str.h"
+#include "golf_sdl.h"
+#include "golf_assets.h"
+#include "golf_draw.h"
+#include "golf_input.h"
+#include "golf_global.h"
+//#include "golf_gui.h"
+
+#include "golf_input.cpp"
+#include "golf_assets.cpp"
+#include "golf_draw.cpp"
+//#include "golf_gui.cpp"
+#include "golf.cpp"
+
+internal s32
+sdl_init() {
+	sdl_log("SDL!!!\n");
+
+	bool init_result = SDL_Init(SDL_INIT_VIDEO);
+	if (!init_result) {
+		return -1;
+	} else {
+		sdl_log("Initialized SDL successfully.\n");
+	}
+
+	const int compiled = SDL_VERSION; // hardcoded number from SDL headers
+	const int linked = SDL_GetVersion(); // reported by linked SDL library
+
+	sdl_log("Compiled SDL version %d.%d.%d ...\n", SDL_VERSIONNUM_MAJOR(compiled), SDL_VERSIONNUM_MINOR(compiled), SDL_VERSIONNUM_MICRO(compiled));
+	sdl_log("Linked SDL version %d.%d.%d.\n", SDL_VERSIONNUM_MAJOR(linked), SDL_VERSIONNUM_MINOR(linked), SDL_VERSIONNUM_MICRO(linked));
+
+	sdl_log("Video Driver: %s\n", SDL_GetCurrentVideoDriver());
+
+	// Create window
+	const char *window_name = "golf";
+	int window_width = 800;
+	int window_height = 500;
+	SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE;
+	sdl_ctx.window = SDL_CreateWindow(window_name, window_width, window_height, window_flags);
+	if (!sdl_ctx.window) {
+		sdl_log_error("%s\n", SDL_GetError());
+		return FAILURE;
+	} else {
+		sdl_log("Window created successfully.\n");
+	}
+
+	sdl_ctx.renderer = SDL_CreateRenderer(sdl_ctx.window, NULL);
+	const char *renderer_name = SDL_GetRendererName(sdl_ctx.renderer);
+
+	sdl_log("Render Drivers:");
+	int num_render_drivers = SDL_GetNumRenderDrivers();
+	for (int i = 0; i < num_render_drivers; i++) {
+		const char* driver = SDL_GetRenderDriver(i);
+		if (!SDL_strcmp(driver, renderer_name)) {
+			sdl_log("  %s *", driver);
+		} else {
+			sdl_log("  %s", driver);
+		}
+	}
+
+	if (!TTF_Init()) {
+		sdl_log("Couldn't initialize SDL_ttf: %s\n", SDL_GetError());
+		return SDL_APP_FAILURE;
+	}
+
+	init_buttons();
+
+	sdl_ctx.text_engine = TTF_CreateRendererTextEngine(sdl_ctx.renderer);
+	if (!sdl_ctx.text_engine) {
+		sdl_log("Couldn't create text engine\n");
+		return FAILURE;
+	}
+
+	load_assets(&fonts_info);
+
+	return 0;
+}
+
+internal void
+sdl_process_input() {
+	app_input_set_previous_states();
+
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_EVENT_QUIT:
+				sdl_ctx.should_quit = true;
+				break;
+
+			// Mouse Events
+			case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+				app_input.mouse.coords = { event.button.x, event.button.y };
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					app_input.mouse.left.current_state = TRUE;
+				}
+				app_input.last_input_type = IN_MOUSE;
+			} break;
+
+			case SDL_EVENT_MOUSE_BUTTON_UP: {
+				app_input.mouse.coords = { event.button.x, event.button.y };
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					app_input.mouse.left.current_state = FALSE;
+				}
+				app_input.last_input_type = IN_MOUSE;
+			} break;
+
+			// Keyboard Events
+			case SDL_EVENT_KEY_DOWN:
+			case SDL_EVENT_KEY_UP: {
+				SDL_KeyboardEvent *keyboard_event = &event.key;
+
+				//#ifdef DEBUG
+				//        debug.last_key = keyboard_event->key;
+				//#endif // DEBUG
+
+				
+				for (u32 i = 0; i < ARRAY_COUNT(app_input.buttons); i++) {
+					Button *button = &app_input.buttons[i];
+					if (button_is_id(button, keyboard_event->key)) {
+						button->current_state = keyboard_event->down;
+					}
+				}
+				
+
+			} break;
+		}
+	}
+}
+
+int main(int argc, char* argv[]) {
+	sdl_init();
+
+	golf_init();
+
+	while (!sdl_ctx.should_quit) {
+		SDL_GetWindowSize(sdl_ctx.window, &sdl_ctx.window_dim.x, &sdl_ctx.window_dim.y);
+		sdl_process_input();
+
+		golf_update();
+	}
+
+	SDL_DestroyRenderer(sdl_ctx.renderer);
+	SDL_DestroyWindow(sdl_ctx.window);
+	TTF_Quit();
+	SDL_Quit();
+
+	return 0;
+}
