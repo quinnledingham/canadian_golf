@@ -52,6 +52,10 @@ struct Buffer {
 	void clear() {
 	  memset(memory, 0, size);
 	}
+
+	const char* str() {
+		return (const char*)memory;
+	}
 };
 
 internal Buffer

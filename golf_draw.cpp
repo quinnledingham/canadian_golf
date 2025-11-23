@@ -1,6 +1,6 @@
 internal void
 draw_rect(Vector2 coords, Vector2 size, Color_RGBA color) {
-	const SDL_FRect rect = { coords.x, coords.y, coords.x + size.x, coords.y + size.y };
+	const SDL_FRect rect = { coords.x, coords.y, size.x, size.y };
 	SDL_SetRenderDrawColor(sdl_ctx.renderer, color.r, color.g, color.b, color.a);
 	SDL_RenderFillRect(sdl_ctx.renderer, &rect);
 }
@@ -16,7 +16,7 @@ static int NUM_CIRCLE_SEGMENTS = 16;
 //all rendering is performed by a single SDL call, avoiding multiple RenderRect + plumbing choice for circles.
 internal void
 draw_rounded_rect(const Vector2 coords, const Vector2 size, const float cornerRadius, const Color_RGBA _color) {
-	const SDL_FRect rect = { coords.x, coords.y, coords.x + size.x, coords.y + size.y };
+	const SDL_FRect rect = { coords.x, coords.y, size.x, size.y };
 	Vector4 colorv4 = cv4(_color);
 	const SDL_FColor color = { colorv4.r / 255, colorv4.g / 255, colorv4.b / 255, colorv4.a / 255 };
 
@@ -123,13 +123,20 @@ draw_rounded_rect(const Vector2 coords, const Vector2 size, const float cornerRa
 	SDL_free(indices);
 }
 
-/*
+
 internal String_Draw_Info
-get_string_draw_info(u32 id, const char *string, s32 length, float32 pixel_height) {
-  Font *font = find_font(id);
-  return get_string_draw_info(font, string, length, pixel_height);
+get_string_draw_info(const char *string, s32 length, float32 pixel_height) {
+	Font *font = find_font(draw_ctx.font_id);
+
+	String_Draw_Info info = {};
+
+	Vector2_s32 dim = {};
+	TTF_SetFontSize(font->ttf_font, pixel_height);
+	TTF_GetStringSize(font->ttf_font, string, length, &dim.width, &dim.height);
+	info.dim = cv2(dim);
+
+	return info;
 }
-*/
 
 internal void
 draw_text(const char *text, Vector2 coords, float32 pixel_height, Color_RGBA color) {

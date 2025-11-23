@@ -42,10 +42,6 @@ union Vector2_s32 {
 	s32 E[2];
 };
 
-inline Vector2 cv2(Vector2_s32 v) {
-	return Vector2{ float32(v.x), float32(v.y) };
-};
-
 union Vector2_u32 {
 	struct {
 		u32 x, y;

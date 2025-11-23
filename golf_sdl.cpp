@@ -4,19 +4,20 @@
 
 #include "golf_defines.h"
 #include "golf_types.h"
+#include "golf_types_math.h"
 #include "golf_structs.h"
 #include "golf_str.h"
 #include "golf_sdl.h"
 #include "golf_assets.h"
 #include "golf_draw.h"
 #include "golf_input.h"
+#include "golf_gui.h"
 #include "golf_global.h"
-//#include "golf_gui.h"
 
 #include "golf_input.cpp"
 #include "golf_assets.cpp"
 #include "golf_draw.cpp"
-//#include "golf_gui.cpp"
+#include "golf_gui.cpp"
 #include "golf.cpp"
 
 internal s32
@@ -38,8 +39,12 @@ sdl_init() {
 
 	sdl_log("Video Driver: %s\n", SDL_GetCurrentVideoDriver());
 
+	// Setup time metrics
+	sdl_ctx.start_ticks = SDL_GetPerformanceCounter();
+	sdl_ctx.performance_frequency = SDL_GetPerformanceFrequency();
+
 	// Create window
-	const char *window_name = "golf";
+	const char *window_name = "Canadian Golf";
 	int window_width = 800;
 	int window_height = 500;
 	SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE;
@@ -134,12 +139,35 @@ sdl_process_input() {
 	}
 }
 
+inline float64
+sdl_get_seconds_elapsed(u64 start, u64 end, u64 performance_frequency) {
+	float64 result = ((float64)(end - start) / (float64)performance_frequency);
+	return result;
+}
+
+internal void 
+sdl_update_time() {
+	sdl_ctx.last_ticks = sdl_ctx.now_ticks;
+	sdl_ctx.now_ticks = SDL_GetPerformanceCounter();
+
+	// s
+	sdl_ctx.frame_time_s = sdl_get_seconds_elapsed(sdl_ctx.last_ticks, sdl_ctx.now_ticks, sdl_ctx.performance_frequency);
+
+	// time->start has to be initialized before
+	sdl_ctx.run_time_s = sdl_get_seconds_elapsed(sdl_ctx.start_ticks, sdl_ctx.now_ticks, sdl_ctx.performance_frequency);
+
+	// fps
+	sdl_ctx.frames_per_s = 1.0 / sdl_ctx.frame_time_s;
+}
+
 int main(int argc, char* argv[]) {
 	sdl_init();
 
 	golf_init();
 
 	while (!sdl_ctx.should_quit) {
+		sdl_update_time();
+
 		SDL_GetWindowSize(sdl_ctx.window, &sdl_ctx.window_dim.x, &sdl_ctx.window_dim.y);
 		sdl_process_input();
 

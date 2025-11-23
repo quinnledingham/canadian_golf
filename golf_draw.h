@@ -4,6 +4,11 @@ global const Color_RGBA golf_yellow       = { 238, 255,  0,  255 };
 global const Color_RGBA golf_light_yellow = { 240, 229, 118, 255 };
 global const Color_RGBA golf_dark_yellow  = { 197, 180,  22, 255 };
 
+inline u8 
+alpha(float32 in) {
+	return u8(255 * in);
+}
+
 /*
 (0, 0)
  -> ###############################
