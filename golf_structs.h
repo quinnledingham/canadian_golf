@@ -66,3 +66,14 @@ blank_buffer(u32 size) {
   SDL_memset(result.memory, 0, size);
   return result;
 }
+
+template<typename T>
+struct AST_Node {
+	AST_Node<T> *children;
+	u32 children_count;
+};
+
+template<typename T>
+struct AST {
+	AST_Node<T> root;
+};

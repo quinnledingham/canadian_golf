@@ -23,15 +23,14 @@ get_centered_text_coords(String_Draw_Info string_info, Vector2 dim, u32 text_ali
 }
 
 internal Vector2
-text_coords(Rect rect, const char *text, float32 pixel_height, u32 text_align) {
-	String_Draw_Info info = get_string_draw_info(text, get_length(text), pixel_height);
+text_coords(Rect rect, String_Draw_Info info, u32 text_align) {
 
 	Vector2 text_coords = {};
 
 	switch (text_align) {
 		case ALIGN_CENTER:
 			text_coords.x = rect.coords.x + (rect.dim.x / 2.0f) - (info.dim.x / 2.0f);
-			text_coords.y = rect.coords.y + (rect.dim.y / 2.0f) - (info.baseline.y / 2.0f);
+			text_coords.y = rect.coords.y + (rect.dim.y / 2.0f) - (info.dim.y / 2.0f);
 			break;
 		case ALIGN_RIGHT:
 			text_coords.x = rect.coords.x + (rect.dim.x) - (info.dim.x);
@@ -44,13 +43,6 @@ text_coords(Rect rect, const char *text, float32 pixel_height, u32 text_align) {
 	}
 
 	return text_coords;
-}
-
-internal void
-draw_text(const char *text, Rect rect, float32 percent, u32 text_align, Color_RGBA color) {
-	float32 pxh = rect.dim.y * percent;
-	Vector2 coords = text_coords(rect, text, pxh, text_align);
-	draw_text(text, coords, pxh, color);
 }
 
 internal Rect
@@ -329,3 +321,55 @@ draw_top_gui() {
 	#endif // DEBUG
 	return gui->draw(gui);
 }
+
+internal void
+ui_box(UI_Box *parent, UI_Box *child, float32 margin_percent, float32 width_percent) {
+	float32 shorter_side = parent->dim.height;
+	if (parent->dim.width < parent->dim.height)
+		shorter_side = parent->dim.width;
+
+	float32 margin = shorter_side * margin_percent;
+
+	child->coords = parent->coords + margin;
+	for (u32 i = 0; i < parent->children_count; i++) {
+		UI_Box *other = parent->children[i];
+		child->coords.x += other->dim.x;
+	}
+
+	child->dim = parent->dim - (margin * 2.0f);
+	child->dim.x *= width_percent;
+
+	parent->children[parent->children_count++] = child;
+	child->parent = parent;
+};
+
+internal void
+ui_update_boxes(UI_Box *box) {
+	if (box->children_count == 0) {
+		return;
+	}
+
+	float32 new_width = box->dim.width / float32(box->children_count);
+
+	for (u32 i = 0; i < box->children_count; i++) {
+		UI_Box *child = box->children[i];
+		ui_update_boxes(child);
+
+		child->dim.x = new_width;
+		child->coords.x += (i * new_width);
+	}
+}
+
+ internal Rect
+ get_centered_rect(Rect og, float32 margin_percent) {
+ 	float32 shorter_side = og.dim.height;
+	if (og.dim.width < og.dim.height)
+		shorter_side = og.dim.width;
+
+	float32 margin = shorter_side * margin_percent;
+
+	Rect rect = {};
+	rect.coords = og.coords + margin;
+	rect.dim = og.dim - (margin * 2.0f);
+	return rect;
+ }

@@ -65,9 +65,28 @@ struct Textbox {
 
 };
 
-struct GUI_Rect {
-	Vector2 dim; // % of above in hierarchy
-	Vector2_s32 segments; // splits of dim
+struct UI_Box {
+	Rect rect;
+
+	Vector2_s32 segments;
+
+	bool8 visible;
+	bool8 interactable;
+};
+
+struct UI_Widget {
+	Vector2 coords; // location
+	Vector2 percent_dim; // % of above in hierarchy
+	Vector2 dim; // px
+	//Vector2_s32 segments; // splits of dim
+
+	bool8 visible;
+	bool8 interactable;
+
+	UI_Widget *root[3]; // start a new graph for a menu in this box
+	u32 root_count;
+	UI_Widget *children[3]; // continue graph for current menu (add rows)
+	u32 children_count;
 };
 
 struct GUI {
@@ -81,6 +100,8 @@ struct GUI {
 
 	Vector4 background_color; // clears the windows to this color
 	Vector4 back_color; // color of just the part of the screen covered by gui with dim
+
+	UI_Widget base; // defines a widget that fills the whole screen
 
 	Vector2 dim; // %
 	Vector2_s32 segments; // splits of dim
@@ -128,4 +149,3 @@ struct GUI_Manager {
 
 	Stack<u32> indices = Stack<u32>(10); // index at the top is the gui that is currently rendered
 };
-

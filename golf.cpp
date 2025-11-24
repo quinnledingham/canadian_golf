@@ -1,43 +1,56 @@
 internal s32
 draw_main_menu(GUI *gui) {
-	Vector2 wdim = cv2(sdl_ctx.window_dim);
 
+	gui->start();
+	
+	Rect base;
+	base.coords = {0, 0};
+	base.dim = cv2(sdl_ctx.window_dim);
+	
+	Rect menu_box = get_centered_rect(base, 0.05f);
+	Rect player_box = {};
+	player_box.coords = menu_box.coords;
+	player_box.dim = menu_box.dim;
+	player_box.dim.x *= (2.0f/3.0f);
+
+	Rect title_box = {};
+	title_box.coords = menu_box.coords;
+	title_box.coords.x += player_box.dim.x;
+	title_box.dim = menu_box.dim;
+	title_box.dim.x *= (1.0f/3.0f);
+
+	Vector2 wdim = cv2(sdl_ctx.window_dim);
 	float32 s_side = wdim.height;
 	if (wdim.width < wdim.height)
 		s_side = wdim.width;
+
+	float32 window_radius = s_side * 0.01f;
+
 	draw_ctx.font_id = FONT_CHELA;
 
 	draw_rect({0, 0}, cv2(sdl_ctx.window_dim), golf_green);
 
-	float32 window_padding = s_side * 0.05f;
-	float32 window_radius = s_side * 0.01f;
+	draw_rounded_rect(player_box.coords, player_box.dim, window_radius, golf_dark_green);
+	draw_rounded_rect(title_box.coords, title_box.dim, window_radius, golf_dark_green);
 
-	Rect player_rect = {};
-	player_rect.coords = Vector2{0, 0} + window_padding;
-	player_rect.dim = wdim - (window_padding * 2.0f);
-	player_rect.dim.x *= (2.0f/3.0f);
+	float32 title_pxh = title_box.dim.y * 0.1f;
 
-	draw_rounded_rect(player_rect.coords, player_rect.dim, window_radius, golf_dark_green);
+	/*
+	const char *title_p1 = "Canadian";
+	const char *title_p2 = "Golf";
+	String_Draw_Info p1_info = get_string_draw_info(title_p1, title_pxh);
+	Vector2 title_coords = text_coords(title_box, p1_info, ALIGN_CENTER);
+	draw_text("Canadian", title_coords, title_pxh, golf_yellow);
+	*/
 
-	Rect title_rect = {};
-	title_rect.coords = player_rect.coords;
-	title_rect.coords.x += player_rect.dim.x;
-	title_rect.dim = wdim - (window_padding * 2.0f);
-	title_rect.dim.x *= (1.0f/3.0f);
-
-	draw_rounded_rect(title_rect.coords, title_rect.dim, window_radius, golf_dark_green);
-
-	//const char *title_p1 = "Canadian";
-	//float32 title_pxh = title_rect.dim.y * 0.1f;
-	//Vector2 title_coords = text_coords(title_rect, title_p1, title_pxh, ALIGN_CENTER);
-	//draw_text("Canadian", title_coords, title_pxh, golf_yellow);
-
-	draw_text("Canadian", title_rect, 0.1f, ALIGN_CENTER, golf_yellow);
+	gui_button(gui, "Play");
 
 	draw_text("CUM", { 100, 100 }, 52.0f, golf_yellow);
 	draw_text("CUM", { 200, 100 }, 32.0f, golf_yellow);
 	draw_text("CUM", { 300, 100 }, 22.0f, golf_yellow);
 	draw_text("CUM", { 400, 100 }, 12.0f, golf_yellow);
+
+	gui->end();
 
 	return 0;
 }

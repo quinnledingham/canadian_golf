@@ -138,6 +138,21 @@ get_string_draw_info(const char *string, s32 length, float32 pixel_height) {
 	return info;
 }
 
+internal String_Draw_Info
+get_string_draw_info(const char *string, float32 pixel_height) {
+	s32 length = get_length(string);
+	Font *font = find_font(draw_ctx.font_id);
+
+	String_Draw_Info info = {};
+
+	Vector2_s32 dim = {};
+	TTF_SetFontSize(font->ttf_font, pixel_height);
+	TTF_GetStringSize(font->ttf_font, string, length, &dim.width, &dim.height);
+	info.dim = cv2(dim);
+
+	return info;
+}
+
 internal void
 draw_text(const char *text, Vector2 coords, float32 pixel_height, Color_RGBA color) {
 	Font *font = find_font(draw_ctx.font_id);
