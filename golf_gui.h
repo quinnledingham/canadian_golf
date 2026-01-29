@@ -65,15 +65,6 @@ struct Textbox {
 
 };
 
-struct UI_Box {
-	Rect rect;
-
-	Vector2_s32 segments;
-
-	bool8 visible;
-	bool8 interactable;
-};
-
 struct UI_Widget {
 	Vector2 coords; // location
 	Vector2 percent_dim; // % of above in hierarchy
@@ -148,4 +139,19 @@ struct GUI_Manager {
 	GUI guis[GUI_COUNT];
 
 	Stack<u32> indices = Stack<u32>(10); // index at the top is the gui that is currently rendered
+};
+
+
+struct UI_Box {
+	UI_Box *parent; // if this is zero it is the top gui
+	Vector2 coords_percent;
+	Vector2 dim_percent;
+
+	Vector2 coords;
+	Vector2 dim;
+	
+	u32 index;
+	u32 hover;
+	u32 pressed;
+	u32 active;
 };

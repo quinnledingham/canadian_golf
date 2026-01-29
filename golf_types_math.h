@@ -242,3 +242,19 @@ orthographic_projection(float32 l, float32 r, float32 b, float32 t, float32 n, f
 		-((r + l) / (r - l)), -((t + b) / (t - b)), -((f + n) / (f - n)),  1
 	};
 }
+
+//
+// Color_RGBA
+//
+
+union Color_RGBA HexToRGBA(u32 hex) {
+    union Color_RGBA color;
+    
+    // Extracting bits: 0xRR GGBB AA
+    color.r = (u8)((hex >> 24) & 0xFF);
+    color.g = (u8)((hex >> 16) & 0xFF);
+    color.b = (u8)((hex >> 8)  & 0xFF);
+    color.a = (u8)(hex         & 0xFF);
+    
+    return color;
+}

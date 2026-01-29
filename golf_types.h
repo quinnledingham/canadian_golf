@@ -40,6 +40,8 @@ union Vector2_s32 {
 		s32 w, h;
 	};
 	s32 E[2];
+
+	operator Vector2() const { return { (float)x, (float)y }; }
 };
 
 union Vector2_u32 {

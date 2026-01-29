@@ -1,3 +1,4 @@
+/*
 // WARNING: centers vertically using baseline
 inline Vector2
 get_centered_text_coords(String_Draw_Info string_info, Vector2 dim, u32 text_align) {
@@ -156,13 +157,6 @@ gui_start(GUI *gui) {
 
 
 	Vector2 gui_dim_pixels = gui->dim * cv2(sdl_ctx.window_dim);
-	/*
-	float32 x_coord = float32((vk_ctx.window_dim.x / 2) - (gui_dim_pixels.x / 2));
-	float32 y_coord = float32((vk_ctx.window_dim.y / 2) - (gui_dim_pixels.y / 2));
-	gui->coords = { x_coord, y_coord };
-	gui->coords += gui->shift * cv2(vk_ctx.window_dim);
-	draw_rect(gui->coords, gui_dim_pixels, gui->back_color);
-	*/
 	gui->padding_px = gui_dim_pixels * gui->padding;
 
 	gui->segment_dim = (gui_dim_pixels / cv2(gui->segments));
@@ -182,13 +176,12 @@ gui_end(GUI *gui) {
 			active_gui = true;
 	}
 
-	/*
+	
 	if (active_gui && gui->hover != 0) {
 		SDL_SetCursor(sdl_ctx.pointer_cursor);
 	} else {
 		SDL_SetCursor(sdl_ctx.default_cursor);
 	}
-	*/
 }
 
 internal bool8
@@ -373,3 +366,90 @@ ui_update_boxes(UI_Box *box) {
 	rect.dim = og.dim - (margin * 2.0f);
 	return rect;
  }
+ */
+
+internal UI_Box
+draw_ui_box(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, Color_RGBA color) {
+
+
+	Vector2 coords = {};
+	Vector2 dim = {};
+	if (parent == NULL) {
+		coords = { 0, 0 };
+		dim = (Vector2)sdl_ctx.window_dim;
+	} else {
+		coords = parent->coords;
+		dim = parent->dim;
+	}
+
+	Vector2 coords_delta = dim * coords_percent;
+	coords += coords_delta;
+
+	dim = dim * dim_percent;
+
+	draw_rect(coords, dim, color);
+
+	UI_Box ret = {
+		.parent = parent,
+		.coords_percent = coords_percent,
+		.dim_percent = dim_percent,
+		.coords = coords,
+		.dim = dim,
+	};
+
+	return ret;
+
+}
+
+internal UI_Box
+draw_centered_ui_box(UI_Box *parent, float32 padding_percent, Color_RGBA color) {
+	ASSERT(parent != NULL);
+
+	Vector2 coords_percent = {};
+
+	if (parent->dim.x >= parent->dim.y) {
+		coords_percent.y = padding_percent;
+		float32 coords_delta = parent->dim.y * padding_percent;
+		float32 coords_x = parent->coords.x + coords_delta;
+		coords_percent.x = (coords_x - parent->coords.x) / parent->dim.x;
+	} else {
+		coords_percent.x = padding_percent;
+		float32 coords_delta = parent->dim.x * padding_percent;
+		float32 coords_y = parent->coords.y + coords_delta;
+		coords_percent.y = (coords_y - parent->coords.x) / parent->dim.y;
+	}
+
+	Vector2 dim_percent = (parent->dim - (parent->dim * coords_percent * 2.0f))/parent->dim;
+	return draw_ui_box(NULL, coords_percent, dim_percent, color);
+}
+
+internal Vector2
+text_coords(UI_Box box, String_Draw_Info info, u32 text_align) {
+
+	Vector2 text_coords = {};
+
+	switch (text_align) {
+		case ALIGN_CENTER:
+			text_coords.x = box.coords.x + (box.dim.x / 2.0f) - (info.dim.x / 2.0f);
+			text_coords.y = box.coords.y + (box.dim.y / 2.0f) - (info.dim.y / 2.0f);
+			break;
+		case ALIGN_RIGHT:
+			text_coords.x = box.coords.x + (box.dim.x) - (info.dim.x);
+			text_coords.y = box.coords.y + (box.dim.y / 2.0f) - (info.baseline.y / 2.0f) + info.baseline.y;
+			break;
+		case ALIGN_LEFT:
+			text_coords.x = box.coords.x + info.baseline.x;
+			text_coords.y = box.coords.y + (box.dim.y / 2.0f) - (info.baseline.y / 2.0f) + info.baseline.y;
+			break;
+	}
+
+	return text_coords;
+}
+
+internal void
+draw_text(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, const char *text, Color_RGBA color) {
+	UI_Box box = draw_ui_box(parent, coords_percent, dim_percent, color);
+	String_Draw_Info info = get_string_draw_info(text, get_length(text), box.dim.y);
+	Vector2 coords = text_coords(box, info, ALIGN_CENTER);
+	draw_text(text, coords, box.dim.y, color);
+}

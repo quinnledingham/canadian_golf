@@ -1,56 +1,19 @@
 internal s32
-draw_main_menu(GUI *gui) {
+draw_main_menu() {
 
-	gui->start();
-	
-	Rect base;
-	base.coords = {0, 0};
-	base.dim = cv2(sdl_ctx.window_dim);
-	
-	Rect menu_box = get_centered_rect(base, 0.05f);
-	Rect player_box = {};
-	player_box.coords = menu_box.coords;
-	player_box.dim = menu_box.dim;
-	player_box.dim.x *= (2.0f/3.0f);
+	UI_Box gui = draw_ui_box(NULL, { 0, 0 }, { 1.0f, 1.0f }, HexToRGBA(0x005F19FF));
 
-	Rect title_box = {};
-	title_box.coords = menu_box.coords;
-	title_box.coords.x += player_box.dim.x;
-	title_box.dim = menu_box.dim;
-	title_box.dim.x *= (1.0f/3.0f);
+	UI_Box menu = draw_centered_ui_box(&gui, 0.05f, HexToRGBA(0xFF0000FF));
 
-	Vector2 wdim = cv2(sdl_ctx.window_dim);
-	float32 s_side = wdim.height;
-	if (wdim.width < wdim.height)
-		s_side = wdim.width;
+	UI_Box player_list = draw_ui_box(&menu, { 0, 0 }, { 2.0f/3.0f, 1.0f }, HexToRGBA(0x008723FF));
+	UI_Box buttons_list = draw_ui_box(&menu, { 2.0f/3.0f, 0 }, { 1.0f/3.0f, 1.0f }, HexToRGBA(0x005F19FF));
 
-	float32 window_radius = s_side * 0.01f;
-
-	draw_ctx.font_id = FONT_CHELA;
-
-	draw_rect({0, 0}, cv2(sdl_ctx.window_dim), golf_green);
-
-	draw_rounded_rect(player_box.coords, player_box.dim, window_radius, golf_dark_green);
-	draw_rounded_rect(title_box.coords, title_box.dim, window_radius, golf_dark_green);
-
-	float32 title_pxh = title_box.dim.y * 0.1f;
-
-	/*
-	const char *title_p1 = "Canadian";
-	const char *title_p2 = "Golf";
-	String_Draw_Info p1_info = get_string_draw_info(title_p1, title_pxh);
-	Vector2 title_coords = text_coords(title_box, p1_info, ALIGN_CENTER);
-	draw_text("Canadian", title_coords, title_pxh, golf_yellow);
-	*/
-
-	gui_button(gui, "Play");
+	draw_text(buttons_list, { 0, 0 }, { 1.0f, 1.0f / 3.0f }, "Canadian Golf", HexToRGBA(0xFFD600FF)) {
 
 	draw_text("CUM", { 100, 100 }, 52.0f, golf_yellow);
 	draw_text("CUM", { 200, 100 }, 32.0f, golf_yellow);
 	draw_text("CUM", { 300, 100 }, 22.0f, golf_yellow);
 	draw_text("CUM", { 400, 100 }, 12.0f, golf_yellow);
-
-	gui->end();
 
 	return 0;
 }
@@ -64,8 +27,8 @@ draw_fps() {
 
 internal u32
 golf_init() {
-	gui_manager.indices.push(GUI_MAIN_MENU);
-	gui_manager.guis[GUI_MAIN_MENU].draw = draw_main_menu;
+	//gui_manager.indices.push(GUI_MAIN_MENU);
+	//gui_manager.guis[GUI_MAIN_MENU].draw = draw_main_menu;
 
 	return 0;
 }
@@ -79,7 +42,8 @@ golf_update() {
 	SDL_SetRenderDrawColor(sdl_ctx.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(sdl_ctx.renderer);
 
-	draw_top_gui();
+	//draw_top_gui();
+	draw_main_menu();
 	draw_fps();
 
 	SDL_RenderPresent(sdl_ctx.renderer);
