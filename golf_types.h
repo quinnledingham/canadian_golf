@@ -163,6 +163,23 @@ union Color_RGBA {
 	u8 E[4];
 };
 
+inline Color_RGBA 
+color_adjust_brightness(Color_RGBA color, float factor) {
+	Color_RGBA result = color;
+
+	for (int i = 0; i < 3; ++i) { // Only iterate over R, G, and B
+		float component = (float)color.E[i] * factor;    
+
+        // Clamp the value between 0 and 255 to prevent wrap-around
+        if (component > 255.0f) component = 255.0f;
+        if (component < 0.0f)   component = 0.0f;
+        
+        result.E[i] = (u8)component;
+	}
+
+	return result;
+}
+
 inline Vector4 cv4(Color_RGBA v) {
 	return Vector4 {float32(v.r), float32(v.g), float32(v.b), float32(v.a) };
 }

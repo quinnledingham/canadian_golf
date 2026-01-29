@@ -46,15 +46,7 @@ text_coords(Rect rect, String_Draw_Info info, u32 text_align) {
 	return text_coords;
 }
 
-internal Rect
-rect_percent(Rect in, float32 p) {
-	Vector2 thickness = { in.h * p, in.h * p }; // px
 
-	Rect r = {};
-	r.dim = in.dim - thickness;
-	r.coords = in.coords + (in.dim / 2.0f) - (r.dim / 2.0f);
-	return r;
-}
 
 internal void
 draw_button(GUI *gui, const Draw_Style style, const u32 state, Rect rect, const char *label, const u32 text_align) {
@@ -368,10 +360,86 @@ ui_update_boxes(UI_Box *box) {
  }
  */
 
+
+internal bool8
+	coords_in_rect(Vector2 in, Vector2 coords, Vector2 dim) {
+	if (in.x >= coords.x && in.x <= coords.x + dim.x &&
+		in.y >= coords.y && in.y <= coords.y + dim.y)
+		return true;
+	return false;
+}
+
+internal void
+gui_do_mouse_input(UI *gui, Vector2 coords, Vector2 dim) {
+	if (coords_in_rect(app_input.mouse.coords, coords, dim)) {
+		gui->hover = gui->index;
+		// don't hover anyways
+		//if (gui->active != 0 && !gui->enabled)
+
+		// don't hover other components when one is pressed
+		if (gui->pressed && gui->pressed != gui->index)
+			gui->hover = 0;
+	} else if (gui->hover == gui->index) {
+		gui->hover = 0;
+	}
+}
+
+// does mouse by default but for keyboard input to work
+// gui->hover has to be set before. It does the logic of when keyboard is clicked
+// but it does not know which one is being hovered.
+internal u32
+ui_update(UI_Box *box, Vector2 coords, Vector2 dim) {
+	u32 state = GUI_DEFAULT; // the state of the calling gui component
+
+	UI *gui = box->ui;
+
+	Button gui_select = {};
+	switch (app_input.last_input_type) {
+		//case CONTROLLER_INPUT:
+		//case KEYBOARD_INPUT: gui_select = *gui->input.select;     break;
+		case IN_MOUSE: gui_select = app_input.mouse.left; break;
+	}
+
+	if (app_input.last_input_type == IN_MOUSE)
+		gui_do_mouse_input(gui, coords, dim);
+
+	if (gui->hover == gui->index) {
+		state = GUI_HOVER;
+
+		if (on_down(gui_select)) {
+			gui->pressed = gui->hover;
+		}
+	}
+
+	if (gui->pressed == gui->index) {
+		state = GUI_PRESSED;
+
+		if (on_up(gui_select)) {
+			if (gui->hover == gui->index) {
+				gui->active = gui->pressed;
+			} else {
+				gui->pressed = 0;
+				gui->active = 0;
+			}
+		}
+	}
+
+	if (gui->active == gui->index) {
+		state = GUI_ACTIVE;
+		gui->pressed = 0;
+		gui->active = 0;
+	}
+
+	gui->index++;
+
+	return state;
+}
+
+
 internal UI_Box
 draw_ui_box(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, Color_RGBA color) {
 
-
+	UI *ui = NULL;
 	Vector2 coords = {};
 	Vector2 dim = {};
 	if (parent == NULL) {
@@ -380,6 +448,7 @@ draw_ui_box(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, Color_R
 	} else {
 		coords = parent->coords;
 		dim = parent->dim;
+		ui = parent->ui;
 	}
 
 	Vector2 coords_delta = dim * coords_percent;
@@ -390,6 +459,7 @@ draw_ui_box(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, Color_R
 	draw_rect(coords, dim, color);
 
 	UI_Box ret = {
+		.ui = ui,
 		.parent = parent,
 		.coords_percent = coords_percent,
 		.dim_percent = dim_percent,
@@ -420,7 +490,7 @@ draw_centered_ui_box(UI_Box *parent, float32 padding_percent, Color_RGBA color) 
 	}
 
 	Vector2 dim_percent = (parent->dim - (parent->dim * coords_percent * 2.0f))/parent->dim;
-	return draw_ui_box(NULL, coords_percent, dim_percent, color);
+	return draw_ui_box(parent, coords_percent, dim_percent, color);
 }
 
 internal Vector2
@@ -447,9 +517,81 @@ text_coords(UI_Box box, String_Draw_Info info, u32 text_align) {
 }
 
 internal void
-draw_text(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, const char *text, Color_RGBA color) {
-	UI_Box box = draw_ui_box(parent, coords_percent, dim_percent, color);
-	String_Draw_Info info = get_string_draw_info(text, get_length(text), box.dim.y);
+draw_ui_text(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, const char *text, Color_RGBA color) {
+	UI_Box box = draw_ui_box(parent, coords_percent, dim_percent, HexToRGBA(0x0));
+
+	float32 pixel_height;
+	if (box.dim.y < box.dim.x)
+		pixel_height = box.dim.y * 0.7f;
+	else
+		pixel_height = box.dim.x * 0.7f;
+
+	String_Draw_Info info = get_string_draw_info(text, get_length(text), pixel_height);
 	Vector2 coords = text_coords(box, info, ALIGN_CENTER);
-	draw_text(text, coords, box.dim.y, color);
+	draw_text(text, coords, pixel_height, color);
+}
+
+internal Rect
+	rect_percent(Rect in, float32 p) {
+	Vector2 thickness = { in.h * p, in.h * p }; // px
+
+	Rect r = {};
+	r.dim = in.dim - thickness;
+	r.coords = in.coords + (in.dim / 2.0f) - (r.dim / 2.0f);
+	return r;
+}
+
+internal bool8
+draw_ui_button(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, const char *label, Color_RGBA text_color, Color_RGBA back_color) {
+	UI_Box box = draw_ui_box(parent, coords_percent, dim_percent, HexToRGBA(0x0));
+
+	u32 state = ui_update(&box, box.coords, box.dim);
+
+	float32 factor = 1.0f;
+	if (state == GUI_HOVER) {
+		factor = 1.8f;
+	} else if (state == GUI_PRESSED) {
+		factor = 0.7f;
+	}
+
+	//text_color = color_adjust_brightness(text_color, factor);
+	back_color = color_adjust_brightness(back_color, factor);
+
+	Rect rect = {};
+	rect.coords = box.coords;
+	rect.dim = box.dim;
+
+	float corner_radius = rect.h / 4.0f;
+	float32 shift = 0.1f * rect.h;
+
+	//rect.coords += gui->backdrop_px;
+	//draw_rounded_rect(rect.coords, rect.dim, rect.h / 4.0f, { 0, 0, 0, alpha(0.2f) }); // back
+	//rect.coords -= gui->backdrop_px;
+
+	//Color_RGBA back_color = style.background_colors[state];
+	draw_rounded_rect(rect.coords, rect.dim, rect.h / 8.0f, color_adjust_brightness(back_color, 0.9f)); // back
+	Rect inner = rect_percent(rect, 0.1f);
+	draw_rounded_rect(inner.coords, inner.dim, inner.h / 8.0f, back_color); // back
+
+	if (label) {
+		float32 pixel_height;
+		if (rect.dim.y < rect.dim.x)
+			pixel_height = rect.dim.y * 0.7f;
+		else
+			pixel_height = rect.dim.x * 0.7f;
+	
+		pixel_height = roundf(pixel_height);
+
+		String_Draw_Info info = get_string_draw_info(label, get_length(label), pixel_height);
+		Vector2 coords = text_coords(box, info, ALIGN_CENTER);
+		//Color_RGBA text_color = style.text_colors[state];
+
+		draw_text(label, coords, pixel_height, text_color); // text
+	}
+
+	bool8 button_pressed = false;
+	if (state == GUI_ACTIVE) {
+		button_pressed = true;
+	}
+	return button_pressed;
 }

@@ -58,6 +58,7 @@ sdl_init() {
 
 	sdl_ctx.renderer = SDL_CreateRenderer(sdl_ctx.window, NULL);
 	const char *renderer_name = SDL_GetRendererName(sdl_ctx.renderer);
+	SDL_SetRenderDrawBlendMode(sdl_ctx.renderer, SDL_BLENDMODE_BLEND);
 
 	sdl_log("Render Drivers:");
 	int num_render_drivers = SDL_GetNumRenderDrivers();
@@ -113,6 +114,13 @@ sdl_process_input() {
 				if (event.button.button == SDL_BUTTON_LEFT) {
 					app_input.mouse.left.current_state = FALSE;
 				}
+				app_input.last_input_type = IN_MOUSE;
+			} break;
+
+			case SDL_EVENT_MOUSE_MOTION: {
+				SDL_MouseMotionEvent *mouse_motion_event = &event.motion;
+				app_input.mouse.coords.x = mouse_motion_event->x;
+				app_input.mouse.coords.y = mouse_motion_event->y;
 				app_input.last_input_type = IN_MOUSE;
 			} break;
 

@@ -96,11 +96,11 @@ inline Font*     find_font    (u32 id) { return (Font *)assets.fonts.find(id);  
 //
 
 enum Font_Ids {
-  FONT_LIMELIGHT,
-  FONT_ROBOTO_MONO,
+  	FONT_LIMELIGHT,
+  	FONT_ROBOTO_MONO,
 	FONT_CHELA,
 
-  FONT_COUNT
+  	FONT_COUNT
 };
 
 Asset_Load font_loads[] = {

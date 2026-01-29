@@ -1,19 +1,21 @@
 internal s32
 draw_main_menu() {
+	draw_ctx.font_id = FONT_CHELA;
+	ui_main_menu.index = 1;
 
 	UI_Box gui = draw_ui_box(NULL, { 0, 0 }, { 1.0f, 1.0f }, HexToRGBA(0x005F19FF));
+	gui.ui = &ui_main_menu;
 
-	UI_Box menu = draw_centered_ui_box(&gui, 0.05f, HexToRGBA(0xFF0000FF));
+	UI_Box menu = draw_centered_ui_box(&gui, 0.05f, HexToRGBA(0x0));
 
 	UI_Box player_list = draw_ui_box(&menu, { 0, 0 }, { 2.0f/3.0f, 1.0f }, HexToRGBA(0x008723FF));
 	UI_Box buttons_list = draw_ui_box(&menu, { 2.0f/3.0f, 0 }, { 1.0f/3.0f, 1.0f }, HexToRGBA(0x005F19FF));
 
-	draw_text(buttons_list, { 0, 0 }, { 1.0f, 1.0f / 3.0f }, "Canadian Golf", HexToRGBA(0xFFD600FF)) {
-
-	draw_text("CUM", { 100, 100 }, 52.0f, golf_yellow);
-	draw_text("CUM", { 200, 100 }, 32.0f, golf_yellow);
-	draw_text("CUM", { 300, 100 }, 22.0f, golf_yellow);
-	draw_text("CUM", { 400, 100 }, 12.0f, golf_yellow);
+	draw_ui_text(&buttons_list, { 0, 0 }, { 1.0f, 1.0f / 3.0f }, "Golf", golf_yellow);
+	draw_ui_button(&buttons_list, { 0, 1.0f/3.0f }, { 1.0f, 1.0f / 3.0f }, "Play", golf_green, golf_yellow);
+	if(draw_ui_button(&buttons_list, { 0, 2.0f/3.0f }, { 1.0f, 1.0f / 3.0f }, "Quit", golf_green, golf_yellow)) {
+		sdl_ctx.should_quit = true;
+	}
 
 	return 0;
 }
@@ -33,7 +35,7 @@ golf_init() {
 	return 0;
 }
 
-internal u32
+internal s32
 golf_update() {
 	if (on_down(app_input.mouse.left)) {
 		SDL_Log("Mouse Coords: (%f, %f)\n", app_input.mouse.coords.x, app_input.mouse.coords.y);

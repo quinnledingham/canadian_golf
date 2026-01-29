@@ -141,17 +141,35 @@ struct GUI_Manager {
 	Stack<u32> indices = Stack<u32>(10); // index at the top is the gui that is currently rendered
 };
 
+enum UI_Directions {
+	UI_RIGHT,
+	UI_UP,
+	UI_LEFT,
+	UI_DOWN,
+};
+
+struct UI;
 
 struct UI_Box {
+	UI *ui;
 	UI_Box *parent; // if this is zero it is the top gui
+
+	UI_Box *neighbours[4]; // defined for controller input
+
 	Vector2 coords_percent;
 	Vector2 dim_percent;
 
 	Vector2 coords;
 	Vector2 dim;
-	
+};
+
+struct UI {
 	u32 index;
 	u32 hover;
 	u32 pressed;
 	u32 active;
+
+	UI_Box *head;
 };
+
+UI ui_main_menu = {};
