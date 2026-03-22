@@ -171,8 +171,12 @@ draw_text(const char *text, Vector2 coords, float32 pixel_height, Color_RGBA col
 
 	#endif // DEBUG
 
+	// Snap to integers to prevent edge bleeding/lines
+	float snap_x = (float)((int)(coords.x + 0.5f));
+	float snap_y = (float)((int)(coords.y + 0.5f));
+
 	TTF_SetTextColor(ttf_text, color.r, color.g, color.b, color.a);
-	bool result = TTF_DrawRendererText(ttf_text, coords.x, coords.y);
+	bool result = TTF_DrawRendererText(ttf_text, snap_x, snap_y);
 	if (!result) {
 		sdl_log("draw_text(), TTF_DrawRendererText failed (%s)\n", SDL_GetError());
 	}

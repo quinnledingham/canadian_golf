@@ -8,15 +8,18 @@ draw_main_menu() {
 
 	UI_Box menu = draw_centered_ui_box(&gui, 0.05f, HexToRGBA(0x0));
 
-	UI_Box player_list = draw_ui_box(&menu, { 0, 0 }, { 2.0f/3.0f, 1.0f }, HexToRGBA(0x008723FF));
+	UI_Box player_list  = draw_ui_box(&menu, { 0, 0 }, { 2.0f/3.0f, 1.0f }, HexToRGBA(0x008723FF));
 	UI_Box buttons_list = draw_ui_box(&menu, { 2.0f/3.0f, 0 }, { 1.0f/3.0f, 1.0f }, HexToRGBA(0x005F19FF));
+	UI_Box inside_buttons_list = draw_centered_ui_box(&buttons_list, 0.05f, HexToRGBA(0x0));
 
-	draw_ui_text(&buttons_list, { 0, 0 }, { 1.0f, 1.0f / 3.0f }, "Golf", golf_yellow);
-	draw_ui_button(&buttons_list, { 0, 1.0f/3.0f }, { 1.0f, 1.0f / 3.0f }, "Play", golf_green, golf_yellow);
-	if(draw_ui_button(&buttons_list, { 0, 2.0f/3.0f }, { 1.0f, 1.0f / 3.0f }, "Quit", golf_green, golf_yellow)) {
+
+	draw_ui_text(     &buttons_list, { 0, 0 },         { 1.0f, 1.0f / 3.0f }, "Golf", golf_yellow);
+	draw_ui_button(   &buttons_list, { 0, 1.0f/3.0f }, { 1.0f, 1.0f / 3.0f }, "Play", golf_green, golf_yellow);
+	/*
+	if(draw_ui_button(&inside_buttons_list, { 0, 2.0f/3.0f }, { 1.0f, 1.0f / 3.0f }, "Quit", golf_green, golf_yellow)) {
 		sdl_ctx.should_quit = true;
 	}
-
+	*/
 	return 0;
 }
 

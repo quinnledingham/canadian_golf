@@ -45,8 +45,8 @@ sdl_init() {
 
 	// Create window
 	const char *window_name = "Canadian Golf";
-	int window_width = 800;
-	int window_height = 500;
+	int window_width = 1200;
+	int window_height = 800;
 	SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE;
 	sdl_ctx.window = SDL_CreateWindow(window_name, window_width, window_height, window_flags);
 	if (!sdl_ctx.window) {

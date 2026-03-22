@@ -456,7 +456,9 @@ draw_ui_box(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, Color_R
 
 	dim = dim * dim_percent;
 
-	draw_rect(coords, dim, color);
+	if (color.a != 0.0f) {
+		draw_rect(coords, dim, color);
+	}
 
 	UI_Box ret = {
 		.ui = ui,
@@ -486,7 +488,7 @@ draw_centered_ui_box(UI_Box *parent, float32 padding_percent, Color_RGBA color) 
 		coords_percent.x = padding_percent;
 		float32 coords_delta = parent->dim.x * padding_percent;
 		float32 coords_y = parent->coords.y + coords_delta;
-		coords_percent.y = (coords_y - parent->coords.x) / parent->dim.y;
+		coords_percent.y = (coords_y - parent->coords.y) / parent->dim.y;
 	}
 
 	Vector2 dim_percent = (parent->dim - (parent->dim * coords_percent * 2.0f))/parent->dim;
@@ -532,7 +534,7 @@ draw_ui_text(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, const 
 }
 
 internal Rect
-	rect_percent(Rect in, float32 p) {
+rect_percent(Rect in, float32 p) {
 	Vector2 thickness = { in.h * p, in.h * p }; // px
 
 	Rect r = {};
@@ -568,7 +570,6 @@ draw_ui_button(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, cons
 	//draw_rounded_rect(rect.coords, rect.dim, rect.h / 4.0f, { 0, 0, 0, alpha(0.2f) }); // back
 	//rect.coords -= gui->backdrop_px;
 
-	//Color_RGBA back_color = style.background_colors[state];
 	draw_rounded_rect(rect.coords, rect.dim, rect.h / 8.0f, color_adjust_brightness(back_color, 0.9f)); // back
 	Rect inner = rect_percent(rect, 0.1f);
 	draw_rounded_rect(inner.coords, inner.dim, inner.h / 8.0f, back_color); // back
@@ -584,8 +585,6 @@ draw_ui_button(UI_Box *parent, Vector2 coords_percent, Vector2 dim_percent, cons
 
 		String_Draw_Info info = get_string_draw_info(label, get_length(label), pixel_height);
 		Vector2 coords = text_coords(box, info, ALIGN_CENTER);
-		//Color_RGBA text_color = style.text_colors[state];
-
 		draw_text(label, coords, pixel_height, text_color); // text
 	}
 
